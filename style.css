@@ -1,0 +1,504 @@
+/* Basic Reset and Variables */
+:root {
+    --bg-color: #ffffff;
+    /* Pantone 11-4201 Cloud Dancer */
+    --text-primary: #121212;
+    --text-secondary: #555555;
+    --accent-color: #333333;
+    --font-main: 'Noto Sans KR', 'Inter', sans-serif;
+    --spacing-unit: 1.5rem;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    line-height: 1.6;
+    padding: 0 4rem;
+    /* Outer margins for "Whitespace" */
+    overflow-x: hidden;
+    /* Prevent horizontal scroll */
+    text-align: justify;
+    /* "모든 글씨를 채움정렬" */
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: #888;
+}
+
+.container {
+    max-width: 1400px;
+    /* Limit max width for readability */
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 4rem;
+    /* Reduced height by approx 0.8 factor (was 1.5) */
+    margin-bottom: 2rem;
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: rgba(255, 255, 255, 0.7);
+    /* Semi-transparent base color */
+    backdrop-filter: blur(10px);
+    /* Blur effect */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    /* Subtle border */
+    /* Adjust for full width */
+    margin-left: -4rem;
+    padding-left: 4rem;
+    padding-right: 4rem;
+    width: calc(100% + 8rem);
+}
+
+.logo-area {
+    display: flex;
+    gap: 1rem;
+}
+
+.logo-box {
+    width: 40px;
+    height: 40px;
+    background-color: #33333300;
+    /* Placeholder for Logo1/2 */
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.nav-area {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #333;
+    /* "Minimalist reinterpretation" - simple outlined circle or square */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #333;
+    background: transparent;
+}
+
+.nav-btn:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+/* Profile Section */
+#profile {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 5rem;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 3rem;
+    margin-top: 2rem;
+    /* Add space for fixed header */
+}
+
+.profile-info {
+    text-align: right;
+    /* "Profile에서 정보는 오른쪽 정렬" */
+    flex: 1;
+    margin-right: 3rem;
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 250px;
+    /* Match photo height roughly for spacing */
+}
+
+.profile-info h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.05rem;
+}
+
+.info-item {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0;
+    /* Remove margin for equal spacing via flex */
+}
+
+.profile-photo {
+    width: 300px;
+    height: 300px;
+    flex-shrink: 0;
+    overflow: hidden;
+    /* Square crop as implied by 1000x1000 */
+}
+
+.profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Content Sections */
+.content-section {
+    margin-bottom: 4rem;
+    position: relative;
+    padding-left: 180px;
+    /* Adjusted Space */
+    width: 50%;
+    /* "절반정도로 줄여줘" */
+}
+
+.content-section h2 {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+    width: 150px;
+    color: #000;
+}
+
+/* Timeline / Entry Styles */
+.entry {
+    display: flex;
+    margin-bottom: 1.5rem;
+    align-items: baseline;
+    position: relative;
+    padding-left: 20px;
+    /* Space for the tree line node */
+}
+
+/* Tree Line Implementation - Per Item for precision */
+.entry::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 1px;
+    background-color: #ccc;
+    top: 0;
+    bottom: 0;
+}
+
+.entry:first-of-type::before {
+    top: 11px;
+    /* Start at the horizontal line (top: 10px + 1px) */
+}
+
+.entry:last-of-type::before {
+    bottom: auto;
+    height: 12px;
+    /* Stop at the horizontal line */
+}
+
+.line-node {
+    position: absolute;
+    left: 0;
+    top: 11px;
+    /* Center with text approx */
+    width: 15px;
+    height: 1px;
+    background-color: #ccc;
+    /* Horizontal branch */
+}
+
+/* Fix for first/last lines or let it run through */
+
+.date {
+    width: 160px;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.details {
+    flex: 1;
+    font-size: 1rem;
+}
+
+.sub-text {
+    font-size: 0.85rem;
+    color: #666;
+    display: block;
+    margin-top: 0.2rem;
+}
+
+/* Paper List */
+.paper-list {
+    list-style: none;
+    position: relative;
+    padding: 0;
+}
+
+.paper-list li {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    color: #333;
+    line-height: 1.5;
+    position: relative;
+    padding-left: 20px;
+    display: flex;
+}
+
+.paper-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 1px;
+    background-color: #ccc;
+    top: 0;
+    bottom: 0;
+}
+
+.paper-list li:first-child::before {
+    top: 11px;
+}
+
+.paper-list li:last-child::before {
+    bottom: auto;
+    height: 12px;
+}
+
+.paper-list .line-node {
+    position: absolute;
+    left: 0;
+    top: 11px;
+    width: 15px;
+    height: 1px;
+    background-color: #ccc;
+}
+
+.paper-list a:hover {
+    text-decoration: underline;
+}
+
+/* Project Gallery */
+#gallery {
+    margin-top: 6rem;
+    margin-bottom: 6rem;
+    padding-top: 4rem;
+    /* Separate visually */
+    border-top: 1px solid #ddd;
+}
+
+.gallery-title {
+    /* Match content-section h2 exactly */
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+    color: #000;
+    margin-bottom: 2rem;
+    display: block;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* 3cols on Web */
+    gap: 1.5rem;
+}
+
+.project-item {
+    display: block;
+    aspect-ratio: 1 / 1;
+    /* Square Shape */
+    background-color: #fff;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+    position: relative;
+    border: none;
+}
+
+.project-item:hover {
+    transform: translateY(-5px);
+}
+
+.project-content {
+    /* Layout interpretation: "Left 4:3 Photo, Right Title Square" 
+       This is hard to fit effectively in a simple grid cell without it looking tiny.
+       I will use a layout where Image takes Focus and Title is clear.
+       If strictly adhering to "Left Photo, Right Title" inside square:
+    */
+    display: flex;
+    height: 100%;
+}
+
+.project-img {
+    flex: 4;
+    /* Aspect similar to 4 parts (4:3 vs Title) */
+    background-size: cover;
+    background-position: center;
+    height: 100%;
+}
+
+.project-info {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1rem;
+    background-color: #fff;
+    border-left: 1px solid #f0f0f0;
+}
+
+.p-year {
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 0.5rem;
+}
+
+.p-title {
+    font-size: 1rem;
+    font-weight: 700;
+    word-break: break-word;
+    /* Ensure text wraps in narrow column */
+    line-height: 1.3;
+}
+
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 3rem 0;
+    font-size: 0.8rem;
+    color: #888;
+    border-top: 1px solid #ddd;
+}
+
+/* Media Queries */
+@media (max-width: 1024px) {
+    body {
+        padding: 0 2rem;
+    }
+
+    header {
+        margin-left: -2rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+        width: calc(100% + 4rem);
+    }
+
+    .profile-photo {
+        width: 250px;
+        height: 250px;
+    }
+
+    .content-section {
+        width: 70%;
+        /* Give more space on tablet */
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 0 1.5rem;
+    }
+
+    header {
+        margin-left: -1.5rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        width: calc(100% + 3rem);
+    }
+
+    #profile {
+        flex-direction: column-reverse;
+        align-items: center;
+        text-align: center;
+    }
+
+    .profile-info {
+        margin-right: 0;
+        text-align: center;
+        padding-top: 2rem;
+        height: auto;
+        gap: 0.5rem;
+    }
+
+    .profile-photo {
+        margin: 0 auto;
+    }
+
+    .content-section {
+        padding-left: 0;
+        width: 100%;
+        /* Full width on mobile */
+    }
+
+    .content-section::before {
+        display: none;
+        /* Hide timeline on mobile for cleanliness or adjust pos */
+    }
+
+    .line-node {
+        display: none;
+    }
+
+    .entry {
+        padding-left: 0;
+    }
+
+    .content-section h2 {
+        position: relative;
+        margin-bottom: 1.5rem;
+        width: 100%;
+        border-bottom: 2px solid #333;
+        padding-bottom: 0.5rem;
+        display: inline-block;
+    }
+
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2cols on Mobile */
+        gap: 1rem;
+    }
+
+    .entry {
+        flex-direction: column;
+    }
+
+    .date {
+        margin-bottom: 0.2rem;
+        width: 100%;
+        color: #888;
+    }
+}
+
+@media (max-width: 480px) {
+    .gallery-grid {
+        grid-template-columns: 1fr;
+        /* 1col on very small screens if needed, otherwise 2 is fine as requested */
+    }
+}
