@@ -89,17 +89,52 @@ header {
     font-weight: bold;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 .nav-area {
     display: flex;
     gap: 1rem;
 }
 
+/* Section Navigation */
+.section-nav {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.section-nav a {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 400;
+    transition: color 0.2s, border-bottom 0.2s;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid transparent;
+    /* Reserve space */
+    text-decoration: none;
+}
+
+.section-nav a:hover,
+.section-nav a.active {
+    color: #000;
+}
+
+.section-nav a.active {
+    border-bottom: 1px solid #333;
+    /* Matches nav-btn border style */
+}
+
 .nav-btn {
     width: 40px;
     height: 40px;
-    border: 1px solid #333;
-    /* "Minimalist reinterpretation" - simple outlined circle or square */
-    border-radius: 50%;
+    border: none;
+    border-bottom: 1px solid #333;
+    /* Changed from circular border to bottom line */
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -109,8 +144,17 @@ header {
 }
 
 .nav-btn:hover {
-    background-color: #333;
-    color: #fff;
+    background-color: transparent;
+    border-bottom: 2px solid #000;
+    color: #000;
+}
+
+/* Scroll Offset for Fixed Header */
+section,
+#gallery,
+#profile {
+    scroll-margin-top: 140px;
+    /* Adjust based on header height + padding */
 }
 
 /* Profile Section */
@@ -133,9 +177,62 @@ header {
     padding-top: 1rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    height: 250px;
+    justify-content: center;
+    /* Center content vertically relative to image */
+    height: 300px;
     /* Match photo height roughly for spacing */
+}
+
+/* Modified Profile Header Styles */
+.profile-header {
+    margin-bottom: 2.5rem;
+    position: relative;
+    top: -1.2rem;
+    /* Shift up slightly */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.name-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    /* Wrap to content width */
+}
+
+/* Korean Name Justification */
+.name-wrapper h1:first-child {
+    display: flex;
+    justify-content: space-between;
+    text-align-last: justify;
+    /* Webkit support */
+}
+
+.desc-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-top: 0.5rem;
+}
+
+.profile-desc {
+    font-style: italic;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.profile-desc sup {
+    font-size: 0.7em;
+    font-style: normal;
+}
+
+.profile-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
 }
 
 .profile-info h1 {
@@ -144,6 +241,35 @@ header {
     margin: 0;
     line-height: 1.2;
     letter-spacing: -0.05rem;
+}
+
+/* Gallery Interaction */
+.project-content {
+    /* Layout: Image top, Title bottom */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+    /* For overlay positioning */
+}
+
+.project-content.proceeding .project-img {
+    filter: blur(4px);
+}
+
+.project-content.proceeding::after {
+    content: "PROCEEDING";
+    position: absolute;
+    top: 35%;
+    /* Position over image area approx */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+    z-index: 10;
+    letter-spacing: 0.1rem;
+    pointer-events: none;
 }
 
 .info-item {
@@ -177,6 +303,11 @@ header {
     /* "절반정도로 줄여줘" */
 }
 
+.content-section.separator {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 3rem;
+}
+
 .content-section h2 {
     position: absolute;
     left: 0;
@@ -199,6 +330,14 @@ header {
     /* Space for the tree line node */
 }
 
+.entry.no-date .date {
+    visibility: hidden;
+}
+
+.entry.no-date .line-node {
+    display: none;
+}
+
 /* Tree Line Implementation - Per Item for precision */
 .entry::before {
     content: '';
@@ -207,7 +346,8 @@ header {
     width: 1px;
     background-color: #ccc;
     top: 0;
-    bottom: 0;
+    bottom: -1.5rem;
+    /* Determine connection to next item */
 }
 
 .entry:first-of-type::before {
@@ -278,7 +418,8 @@ header {
     width: 1px;
     background-color: #ccc;
     top: 0;
-    bottom: 0;
+    bottom: -1rem;
+    /* Matches margin-bottom of li */
 }
 
 .paper-list li:first-child::before {
@@ -346,44 +487,46 @@ header {
 }
 
 .project-content {
-    /* Layout interpretation: "Left 4:3 Photo, Right Title Square" 
-       This is hard to fit effectively in a simple grid cell without it looking tiny.
-       I will use a layout where Image takes Focus and Title is clear.
-       If strictly adhering to "Left Photo, Right Title" inside square:
-    */
+    /* Layout: Image top, Title bottom */
     display: flex;
+    flex-direction: column;
     height: 100%;
 }
 
 .project-img {
-    flex: 4;
-    /* Aspect similar to 4 parts (4:3 vs Title) */
+    flex: 1;
+    /* Takes remaining space */
     background-size: cover;
     background-position: center;
-    height: 100%;
+    width: 100%;
+    /* No fixed height, let flex handle it relative to 1/1 aspect ratio of container */
 }
 
 .project-info {
-    flex: 3;
+    flex: 0 0 auto;
+    /* Don't grow, size to content or fixed px */
+    height: 80px;
+    /* Fixed height for info area */
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding: 1rem;
     background-color: #fff;
-    border-left: 1px solid #f0f0f0;
+    border-top: 1px solid #f0f0f0;
+    border-left: none;
 }
 
 .p-year {
     font-size: 0.8rem;
     color: #999;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
 }
 
 .p-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
+    /* Slight adjustment */
     font-weight: 700;
     word-break: break-word;
-    /* Ensure text wraps in narrow column */
     line-height: 1.3;
 }
 
