@@ -73,4 +73,56 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+
+
+    // BGM Logic
+    const bgmAudio = document.getElementById('bgm-audio');
+    const bgmToggle = document.getElementById('bgm-toggle');
+
+    if (bgmAudio && bgmToggle) {
+        const bgmIcon = bgmToggle.querySelector('i');
+        const bgmText = bgmToggle.querySelector('span');
+        let isPlaying = true; // Default desired state
+
+        function updateBGMUI() {
+            if (isPlaying) {
+                bgmIcon.className = 'fas fa-volume-up';
+                bgmText.textContent = 'ON';
+            } else {
+                bgmIcon.className = 'fas fa-volume-mute';
+                bgmText.textContent = 'OFF';
+            }
+        }
+
+        // Try Autoplay
+        // Note: Browsers may block autoplay. We handle both success and failure.
+        bgmAudio.volume = 0.5; // Set a reasonable default volume
+        const playPromise = bgmAudio.play();
+
+        if (playPromise !== undefined) {
+            playPromise.then(_ => {
+                // Autoplay started!
+                isPlaying = true;
+                updateBGMUI();
+            }).catch(error => {
+                // Autoplay was prevented.
+                // We show "OFF" state or let user click to start.
+                console.log("Autoplay prevented by browser policy.");
+                isPlaying = false;
+                updateBGMUI();
+            });
+        }
+
+        // Toggle Click
+        bgmToggle.addEventListener('click', () => {
+            if (isPlaying) {
+                bgmAudio.pause();
+                isPlaying = false;
+            } else {
+                bgmAudio.play();
+                isPlaying = true;
+            }
+            updateBGMUI();
+        });
+    }
 });

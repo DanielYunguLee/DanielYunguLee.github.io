@@ -1,6 +1,6 @@
 /* Basic Reset and Variables */
 :root {
-    --bg-color: #ffffff;
+    --bg-color: #fcfcfc;
     /* Pantone 11-4201 Cloud Dancer */
     --text-primary: #121212;
     --text-secondary: #555555;
@@ -174,8 +174,8 @@ html {
 section,
 #gallery,
 #profile {
-    scroll-margin-top: 140px;
-    /* Adjust based on header height + padding */
+    scroll-margin-top: var(--header-height-pc);
+    /* Adjust based on header height */
 }
 
 /* Profile Section */
@@ -510,7 +510,7 @@ section,
     display: block;
     aspect-ratio: 1 / 1;
     /* Square Shape */
-    background-color: #fff;
+    background-color: transparent;
     overflow: hidden;
     transition: transform 0.2s ease;
     position: relative;
@@ -546,7 +546,7 @@ section,
     flex-direction: column;
     justify-content: center;
     padding: 1rem;
-    background-color: #fff;
+    background-color: transparent;
     border-top: 1px solid #f0f0f0;
     border-left: none;
 }
@@ -879,5 +879,51 @@ footer {
     .gallery-grid {
         grid-template-columns: 1fr;
         /* 1col on very small screens if needed, otherwise 2 is fine as requested */
+    }
+}
+
+/* BGM Toggle */
+.bgm-toggle {
+    position: fixed;
+    top: var(--header-height-pc);
+    right: 4rem;
+    z-index: 990;
+    background-color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(5px);
+    padding: 0.5rem 1rem;
+    border-radius: 0 0 8px 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-top: none;
+    font-weight: 500;
+}
+
+.bgm-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #000;
+}
+
+.bgm-toggle i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Mobile BGM Positioning */
+@media (max-width: 1024px) {
+    .bgm-toggle {
+        top: var(--header-height-mobile);
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 0 0 10px 10px;
+        padding: 0.4rem 1.2rem;
+        background-color: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
 }
