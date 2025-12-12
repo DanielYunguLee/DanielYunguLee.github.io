@@ -39,4 +39,23 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+    // Mobile Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sectionNav = document.querySelector('.section-nav');
+
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', () => {
+            sectionNav.classList.toggle('active');
+            mobileMenuBtn.classList.toggle('active'); // Animate Hamburger
+        });
+
+        // Close menu when a link is clicked
+        const navLinks = sectionNav.querySelectorAll('a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                sectionNav.classList.remove('active');
+                mobileMenuBtn.classList.remove('active'); // Reset Hamburger
+            });
+        });
+    }
 });

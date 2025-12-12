@@ -26,6 +26,13 @@ body {
     /* Prevent horizontal scroll */
     text-align: justify;
     /* "모든 글씨를 채움정렬" */
+    overflow-x: hidden;
+    width: 100%;
+}
+
+html {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
 }
 
 a {
@@ -69,6 +76,7 @@ header {
     padding-left: 4rem;
     padding-right: 4rem;
     width: calc(100% + 8rem);
+    left: 0;
 }
 
 .logo-area {
@@ -144,6 +152,10 @@ html {
     font-size: 1.2rem;
     color: #333;
     background: transparent;
+}
+
+.mobile-menu-btn {
+    display: none;
 }
 
 .nav-btn:hover {
@@ -283,6 +295,17 @@ section,
     color: var(--text-secondary);
     margin: 0;
     /* Remove margin for equal spacing via flex */
+}
+
+.info-item a {
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.info-item a:hover {
+    text-decoration: underline;
+    color: #000;
 }
 
 .profile-photo {
@@ -553,10 +576,10 @@ footer {
     }
 
     header {
-        margin-left: -2rem;
+        margin-left: calc(50% - 50vw);
         padding-left: 2rem;
         padding-right: 2rem;
-        width: calc(100% + 4rem);
+        width: 100vw;
     }
 
     .profile-photo {
@@ -570,16 +593,121 @@ footer {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     body {
         padding: 0 1.5rem;
+        padding-top: 80px;
+        /* Compensate for fixed header height */
     }
 
     header {
-        margin-left: -1.5rem;
+        position: fixed;
+        /* Fixed as requested */
+        top: 0;
+        left: 0;
+        margin-left: 0;
         padding-left: 1.5rem;
         padding-right: 1.5rem;
-        width: calc(100% + 3rem);
+        width: 100%;
+        /* Full width */
+        justify-content: space-between;
+        background-color: rgba(255, 255, 255, 0.95);
+        /* Ensure opacity */
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+        /* Optional: add subtle shadow for separation */
+    }
+
+    /* Mobile Menu Button */
+    .mobile-menu-btn {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        /* Gap for spacing bars */
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        /* Vertical Center */
+        transform: translate(-50%, -50%);
+        /* Precise Center */
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 1002;
+        padding: 10px;
+        /* Hit area */
+        height: 40px;
+        /* Fixed height for alignment */
+    }
+
+    .mobile-menu-btn .bar {
+        display: block;
+        width: 24px;
+        height: 1px;
+        /* Thin line as requested (0.5x of usual 2px) */
+        background-color: #333;
+        /* Dark Grey/Black */
+        transition: all 0.3s ease-in-out;
+    }
+
+    /* Active State Animation (Hamburger to X) */
+    .mobile-menu-btn.active .bar:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+    }
+
+    .mobile-menu-btn.active .bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .mobile-menu-btn.active .bar:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+    }
+
+    /* Mobile Dropdown Menu */
+    .section-nav {
+        display: none;
+        /* Hide default nav */
+        position: absolute;
+        top: 100%;
+        /* Below header */
+        left: 0;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 0;
+        border-bottom: 1px solid #ddd;
+        z-index: 999;
+        gap: 1.5rem;
+    }
+
+    .section-nav.active {
+        display: flex;
+        /* Show when active */
+    }
+
+    .section-nav a {
+        font-size: 1.1rem;
+        /* Larger text for mobile */
+        width: 100%;
+        text-align: center;
+        padding: 0;
+        /* Remove padding, usage height/flex for spacing */
+        height: 50px;
+        /* Fixed height for consistent vertical centering */
+        display: flex;
+        align-items: center;
+        /* Vertical Center */
+        justify-content: center;
+        /* Horizontal Center */
+    }
+
+    /* Hide horizontal borders or adjust them */
+    .section-nav a.active {
+        border-bottom: none;
+        font-weight: 700;
     }
 
     #profile {
@@ -594,6 +722,14 @@ footer {
         padding-top: 2rem;
         height: auto;
         gap: 0.5rem;
+        align-items: center;
+    }
+
+    .profile-header,
+    .name-wrapper,
+    .desc-wrapper {
+        align-items: center;
+        text-align: center;
     }
 
     .profile-photo {
@@ -626,6 +762,13 @@ footer {
         border-bottom: 2px solid #333;
         padding-bottom: 0.5rem;
         display: inline-block;
+    }
+
+    /* Hide Layout Lines */
+    .entry::before,
+    .paper-list li::before,
+    .line-node {
+        display: none !important;
     }
 
     .gallery-grid {
