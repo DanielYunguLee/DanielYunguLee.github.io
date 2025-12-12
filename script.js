@@ -58,4 +58,19 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     }
+
+    // Accordion Logic for Mobile
+    const accordionHeaders = document.querySelectorAll('.content-section h2');
+    accordionHeaders.forEach(header => {
+        // Skip Gallery from Accordion Logic
+        if (header.parentElement.id === 'gallery') return;
+
+        header.addEventListener('click', () => {
+            // Only enable click toggle on mobile
+            if (window.innerWidth <= 1024) {
+                const parent = header.parentElement;
+                parent.classList.toggle('active');
+            }
+        });
+    });
 });
