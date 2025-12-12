@@ -77,8 +77,8 @@ header {
 }
 
 .logo-box {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     background-color: #33333300;
     /* Placeholder for Logo1/2 */
     color: #fff;
@@ -110,7 +110,8 @@ html {
     color: #666;
     font-weight: 400;
     transition: color 0.2s, border-bottom 0.2s;
-    height: 40px;
+    height: 32px;
+    /* Adjusted to match smaller logo if needed, but keeping text aligned */
     display: flex;
     align-items: center;
     border-bottom: 2px solid transparent;
@@ -129,8 +130,10 @@ html {
 }
 
 .nav-btn {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    /* Adjusted to match logo */
+    height: 32px;
+    /* Adjusted to match logo */
     border: none;
     border-bottom: 1px solid #333;
     /* Changed from circular border to bottom line */
@@ -198,15 +201,18 @@ section,
     display: flex;
     flex-direction: column;
     width: fit-content;
+    align-items: flex-end;
+    gap: 0;
     /* Wrap to content width */
 }
 
 /* Korean Name Justification */
-.name-wrapper h1:first-child {
+.kor-name {
     display: flex;
-    justify-content: space-between;
-    text-align-last: justify;
-    /* Webkit support */
+    /* justify-content: space-between; */
+    /* text-align-last: justify; */
+    /* Removed justification logic as it might look weird side-by-side without fixed width. */
+    /* Just defaulting to standard display for now. */
 }
 
 .desc-wrapper {
