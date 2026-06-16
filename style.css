@@ -1,6 +1,6 @@
 /* Basic Reset and Variables */
 :root {
-    --bg-color: #fcfcfc;
+    --bg-color: #f8f8f8;
     /* Pantone 11-4201 Cloud Dancer */
     --text-primary: #121212;
     --text-secondary: #555555;
@@ -26,9 +26,8 @@ body {
     /* Outer margins for "Whitespace" */
     overflow-x: hidden;
     /* Prevent horizontal scroll */
-    text-align: justify;
-    /* "모든 글씨를 채움정렬" */
-    overflow-x: hidden;
+    text-align: left;
+    /* 한글 가독성: 전역 양끝맞춤(justify) 제거 → 좌측정렬 (강물현상 해소) */
     width: 100%;
 }
 
@@ -46,7 +45,8 @@ a {
 }
 
 a:hover {
-    color: #888;
+    color: #595959;
+    /* WCAG AA: #888(약 3.5:1) → #595959(약 6.9:1)로 대비 보정 */
 }
 
 .container {
@@ -121,7 +121,8 @@ html {
 
 .section-nav a {
     font-size: 0.85rem;
-    color: #666;
+    color: #595959;
+    /* WCAG AA 대비 보정 (#666 → #595959) */
     font-weight: 400;
     transition: color 0.2s, border-bottom 0.2s;
     height: 32px;
@@ -553,7 +554,8 @@ section,
 
 .p-year {
     font-size: 0.8rem;
-    color: #999;
+    color: #6e6e6e;
+    /* WCAG AA: #999(약 2.8:1, 미달) → #6e6e6e(약 4.9:1) */
     margin-bottom: 0.3rem;
 }
 
@@ -571,11 +573,13 @@ footer {
     text-align: center;
     padding: 3rem 0;
     font-size: 0.8rem;
-    color: #888;
+    color: #6e6e6e;
+    /* WCAG AA 대비 보정 (#888 → #6e6e6e) */
     border-top: 1px solid #ddd;
 }
 
 /* Media Queries */
+/* ── Tablet (769px–1024px): 본문 폭을 넓혀 데스크톱 레이아웃 유지 ── */
 @media (max-width: 1024px) {
     body {
         padding: 0 2rem;
@@ -599,7 +603,10 @@ footer {
     }
 }
 
-@media (max-width: 1024px) {
+/* ── Mobile (≤768px): 아코디언·햄버거 메뉴·단일컬럼 레이아웃 ──
+   (기존 max-width:1024px 중복 선언 버그 수정 — I-11/M7.
+    이 블록을 768px로 분리해 태블릿 블록과의 충돌·덮어쓰기를 해소) */
+@media (max-width: 768px) {
     html {
         font-size: 13px;
         /* 0.8x scale */
@@ -871,7 +878,8 @@ footer {
     .date {
         margin-bottom: 0.2rem;
         width: 100%;
-        color: #888;
+        color: #6e6e6e;
+        /* WCAG AA 대비 보정 (#888 → #6e6e6e) */
     }
 }
 
@@ -882,48 +890,25 @@ footer {
     }
 }
 
-/* BGM Toggle */
-.bgm-toggle {
-    position: fixed;
-    top: var(--header-height-pc);
-    right: 4rem;
-    z-index: 990;
-    background-color: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(5px);
-    padding: 0.5rem 1rem;
-    border-radius: 0 0 8px 8px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    color: #555;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    border-top: none;
-    font-weight: 500;
+/* (BGM 토글 관련 스타일 전부 제거 — BGM 기능 삭제, Q1) */
+
+/* Hyperlink Visual Cue for Rows */
+.entry .details a[target="_blank"]::after,
+.paper-list li a[target="_blank"]::after {
+    content: '\f08e'; /* Font Awesome 6 arrow-up-right-from-square */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 0.65em;
+    margin-left: 0.35rem;
+    color: #767676;
+    /* WCAG AA 대비 보정 (#b0b0b0 → #767676) — 외부링크 표시 아이콘 */
+    transition: all 0.2s ease;
+    display: inline-block;
+    vertical-align: middle;
 }
 
-.bgm-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.9);
-    color: #000;
-}
-
-.bgm-toggle i {
-    width: 16px;
-    text-align: center;
-}
-
-/* Mobile BGM Positioning */
-@media (max-width: 1024px) {
-    .bgm-toggle {
-        top: var(--header-height-mobile);
-        right: auto;
-        left: 50%;
-        transform: translateX(-50%);
-        border-radius: 0 0 10px 10px;
-        padding: 0.4rem 1.2rem;
-        background-color: rgba(255, 255, 255, 0.8);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
+.entry .details a[target="_blank"]:hover::after,
+.paper-list li a[target="_blank"]:hover::after {
+    color: #333;
+    transform: translate(1px, -1px);
 }
