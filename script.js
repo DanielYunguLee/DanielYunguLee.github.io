@@ -198,12 +198,16 @@ function initProjectGalleries() {
     }
 
     // projects/<slug>/ 폴더에서 01, 02, 03... 순서로 사진을 자동 탐색해 갤러리에 채운다.
-    //  - 각 번호마다 .jpg → .jpeg → .png (대문자 포함) 순으로 시도하고, 하나라도 있으면 채택
-    //  - 번호가 비면(예: 03이 없음) 거기서 멈춘다 → 파일 이름은 반드시 연속이어야 함
+    //  - 각 번호마다 .jpg → .jpeg → .png → .webp (대문자 포함) 순으로 시도하고, 하나라도 있으면 채택
+    //  - 특정 번호를 못 찾으면(결번·미지원) 건너뛰고 다음 번호를 계속 탐색
+    //  - 다만 연속으로 MISS_LIMIT 개가 비면 사진이 끝난 것으로 보고 종료
     async function discoverImages(project, token) {
         if (!project || !project.slug) return;
-        const exts = ["jpg", "jpeg", "png", "JPG", "JPEG", "PNG"];
-        const MAX = 40; // 안전장치: 한 프로젝트당 최대 40장까지 탐색
+        // jpg/jpeg/png/webp 모두 인식 (대·소문자 포함). 브라우저가 표시 못하는 파일은 자동으로 건너뜀.
+        const exts = ["jpg", "jpeg", "png", "webp", "JPG", "JPEG", "PNG", "WEBP"];
+        const MAX = 40;         // 안전장치: 한 프로젝트당 최대 40번까지 탐색
+        const MISS_LIMIT = 3;   // 연속으로 이 개수만큼 비면 사진 목록이 끝난 것으로 판단하고 종료
+        let consecutiveMiss = 0;
         for (let n = 1; n <= MAX; n++) {
             const num = String(n).padStart(2, "0"); // 1 → "01"
             let hit = null;
@@ -213,7 +217,13 @@ function initProjectGalleries() {
                 if (await probeImage(url)) { hit = url; break; }
             }
             if (token !== openToken) return;
-            if (!hit) break;            // 이 번호의 사진이 없으면 탐색 종료
+            if (!hit) {
+                // 이 번호를 못 찾음(결번 또는 브라우저 미지원 파일) → 건너뛰고 다음 번호 계속 탐색.
+                // 단, 연속으로 여러 개가 비면 사진이 끝난 것으로 보고 종료한다.
+                if (++consecutiveMiss >= MISS_LIMIT) break;
+                continue;
+            }
+            consecutiveMiss = 0;
             curImages.push(hit);
             render();                   // 카운터/좌우버튼 갱신
         }
