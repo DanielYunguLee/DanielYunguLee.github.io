@@ -235,13 +235,16 @@ function initBranding() {
         drawLightbox();
         lb.classList.add("open");
         lb.setAttribute("aria-hidden", "false");
-        document.body.classList.add("lb-lock");
+        // script.js 의 공용 잠금 사용 (배경 스크롤 차단 + 닫을 때 위치 복원)
+        if (typeof lbLockScroll === "function") lbLockScroll();
+        else document.body.classList.add("lb-lock");
     }
 
     function closeLightbox() {
         lb.classList.remove("open");
         lb.setAttribute("aria-hidden", "true");
-        document.body.classList.remove("lb-lock");
+        if (typeof lbUnlockScroll === "function") lbUnlockScroll();
+        else document.body.classList.remove("lb-lock");
         lbImg.src = "";
         start(); // 캐러셀 자동회전 재개
     }

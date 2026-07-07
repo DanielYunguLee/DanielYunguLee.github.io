@@ -74,6 +74,41 @@ document.addEventListener("DOMContentLoaded", () => {
     initProjectGalleries();
 });
 
+// ============================================================
+// 배경 스크롤 잠금 (라이트박스 공용)
+//  - body 를 position:fixed 로 고정해 데스크톱(휠)·모바일(터치) 모두 차단
+//  - 잠글 때 스크롤 위치를 기억했다가 풀 때 정확히 복원
+//  - branding.js 의 로고 라이트박스도 동일 함수를 사용
+// ============================================================
+let lbSavedScrollY = 0;
+let lbScrollLocked = false;
+
+function lbLockScroll() {
+    if (lbScrollLocked) return;
+    lbScrollLocked = true;
+    lbSavedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    // 스크롤바가 사라지며 화면이 옆으로 밀리는 현상 보정 (데스크톱)
+    const scrollbarW = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarW > 0) document.body.style.paddingRight = scrollbarW + "px";
+    document.body.style.top = `-${lbSavedScrollY}px`;
+    document.body.classList.add("lb-lock");
+}
+
+function lbUnlockScroll() {
+    if (!lbScrollLocked) return;
+    lbScrollLocked = false;
+    document.body.classList.remove("lb-lock");
+    document.body.style.top = "";
+    document.body.style.paddingRight = "";
+    // html { scroll-behavior: smooth } 때문에 복원이 애니메이션("주르륵")되지 않도록
+    // 잠시 auto 로 전환해 원래 위치로 즉시 점프한 뒤 원복
+    const html = document.documentElement;
+    const prevBehavior = html.style.scrollBehavior;
+    html.style.scrollBehavior = "auto";
+    window.scrollTo(0, lbSavedScrollY); // 원래 보던 위치로 즉시 복원
+    html.style.scrollBehavior = prevBehavior;
+}
+
 function initProjectGalleries() {
     if (typeof PROJECT_GALLERIES === "undefined" || !Array.isArray(PROJECT_GALLERIES)) return;
 
@@ -131,6 +166,8 @@ function initProjectGalleries() {
     let curProject = null;   // 현재 열린 프로젝트 (개요 표시용)
     let animating = false;   // 사진 전환 애니메이션 진행 중 여부
     let openToken = 0; // 갤러리를 다시 열 때마다 증가 → 이전 프로젝트의 자동 탐색 결과가 섞이지 않도록
+    let discovering = false;              // 자동 탐색 진행 중 여부 (완료 전에는 카운터 분모를 숨김)
+    const galleryCache = new Map();       // slug → 탐색 완료된 이미지 목록 (재진입 시 즉시 사용)
 
     const escapeHtml = (s) =>
         String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -139,7 +176,10 @@ function initProjectGalleries() {
     // 카운터·안내·좌우버튼 등 사진 외 정보 갱신 (transform 은 건드리지 않음)
     function drawInfo() {
         const multi = curImages.length > 1;
-        lbCounter.textContent = multi ? (curIndex + 1) + " / " + curImages.length : "";
+        // 자동 탐색이 끝나기 전에는 분모가 1,2,3... 순차 증가로 보이므로 감추고,
+        // 탐색 완료 후 최종 개수로 한 번에 표시한다.
+        lbCounter.textContent = (multi && !discovering)
+            ? (curIndex + 1) + " / " + curImages.length : "";
         btnPrev.style.display = multi ? "" : "none";
         btnNext.style.display = multi ? "" : "none";
         // 스와이프 안내는 사진이 2장 이상일 때만 (표시 여부는 CSS가 모바일에서만 노출)
@@ -198,13 +238,14 @@ function initProjectGalleries() {
     }
 
     // projects/<slug>/ 폴더에서 01, 02, 03... 순서로 사진을 자동 탐색해 갤러리에 채운다.
-    //  - 각 번호마다 .jpg → .jpeg → .png → .webp (대문자 포함) 순으로 시도하고, 하나라도 있으면 채택
+    //  - 각 번호마다 .jpg → .jpeg → .png → .webp → .jfif (대문자 포함) 순으로 시도하고, 하나라도 있으면 채택
     //  - 특정 번호를 못 찾으면(결번·미지원) 건너뛰고 다음 번호를 계속 탐색
     //  - 다만 연속으로 MISS_LIMIT 개가 비면 사진이 끝난 것으로 보고 종료
+    //  - 탐색이 끝나면 결과를 galleryCache 에 저장 → 같은 프로젝트 재진입 시 즉시 표시
     async function discoverImages(project, token) {
         if (!project || !project.slug) return;
-        // jpg/jpeg/png/webp 모두 인식 (대·소문자 포함). 브라우저가 표시 못하는 파일은 자동으로 건너뜀.
-        const exts = ["jpg", "jpeg", "png", "webp", "JPG", "JPEG", "PNG", "WEBP"];
+        // jpg/jpeg/png/webp/jfif 모두 인식 (대·소문자 포함). 브라우저가 표시 못하는 파일은 자동으로 건너뜀.
+        const exts = ["jpg", "jpeg", "png", "webp", "jfif", "JPG", "JPEG", "PNG", "WEBP", "JFIF"];
         const MAX = 40;         // 안전장치: 한 프로젝트당 최대 40번까지 탐색
         const MISS_LIMIT = 3;   // 연속으로 이 개수만큼 비면 사진 목록이 끝난 것으로 판단하고 종료
         let consecutiveMiss = 0;
@@ -225,8 +266,13 @@ function initProjectGalleries() {
             }
             consecutiveMiss = 0;
             curImages.push(hit);
-            render();                   // 카운터/좌우버튼 갱신
+            drawInfo();                 // 좌우버튼·안내만 갱신 (사진 transform 은 건드리지 않음)
         }
+        // 탐색 완료 → 최종 개수를 캐시하고 카운터를 한 번에 표시
+        if (token !== openToken) return;
+        galleryCache.set(project.slug, curImages.slice());
+        discovering = false;
+        drawInfo();
     }
 
     function open(project) {
@@ -236,20 +282,32 @@ function initProjectGalleries() {
         curTitle = project.title || "";
         curIndex = 0;
         animating = false;
-        // 대표 사진(main)을 먼저 보여주고, 나머지는 폴더에서 자동으로 붙인다.
-        curImages = project.main ? [project.main] : [];
+        resetZoom();
+        const cached = galleryCache.get(project.slug);
+        if (cached) {
+            // 이미 탐색이 끝난 프로젝트: 캐시로 즉시 전체 목록·카운터 표시 (재탐색 없음)
+            curImages = cached.slice();
+            discovering = false;
+        } else {
+            // 대표 사진(main)을 먼저 보여주고, 나머지는 폴더에서 자동으로 붙인다.
+            curImages = project.main ? [project.main] : [];
+            discovering = true;
+        }
         render();
         renderOverview();
         lb.classList.add("open");
         lb.setAttribute("aria-hidden", "false");
-        document.body.classList.add("lb-lock");
-        discoverImages(project, token); // 비동기: 추가 사진을 찾는 대로 갤러리에 채워짐
+        lbLockScroll(); // 배경 스크롤 잠금 (닫을 때 위치 복원)
+        if (!cached) discoverImages(project, token); // 비동기: 추가 사진을 찾는 대로 갤러리에 채워짐
     }
 
     function close() {
+        openToken++; // 진행 중이던 자동 탐색 중단 (부분 결과는 캐시하지 않음)
+        discovering = false;
+        resetZoom();
         lb.classList.remove("open");
         lb.setAttribute("aria-hidden", "true");
-        document.body.classList.remove("lb-lock");
+        lbUnlockScroll();
         lbImg.src = "";
     }
 
@@ -257,6 +315,7 @@ function initProjectGalleries() {
     const SLIDE_MS = 340; // 전환 속도(ms). 값이 클수록 더 천천히 넘어감
     function step(dir) {
         if (curImages.length < 2 || animating) return;
+        resetZoom(); // 사진을 넘길 때 확대 상태 초기화
         animating = true;
         const dist = (lbImg.clientWidth || lbFigure.clientWidth || 320) * 1.05;
 
@@ -312,12 +371,117 @@ function initProjectGalleries() {
         else if (e.key === "ArrowRight") step(1);
     });
 
-    // ---------- 모바일 터치 스와이프 (좌우로 밀어 사진 넘기기) ----------
+    // ---------- 모바일 터치: 스와이프(1배) + 핀치 줌·패닝·더블탭 ----------
+    //  - 1배(scale=1): 한 손가락 좌우 스와이프 → 이전/다음 사진
+    //  - 두 손가락 핀치: 확대/축소 (최대 ZOOM_MAX배, 1배 미만이면 놓을 때 1배로 스냅)
+    //  - 확대 상태(scale>1): 한 손가락 드래그 → 패닝 (스와이프 넘김은 비활성)
+    //  - 더블탭: 2.5배 확대 ↔ 원복
+    //  - 사진 전환·닫기 시 줌 상태 초기화
     let touchStartX = 0, touchStartY = 0, touchDX = 0, swiping = false;
     const SWIPE_THRESHOLD = 55; // 이 정도(px) 이상 가로로 밀어야 넘김으로 인정 (실수 방지)
 
+    const ZOOM_MAX = 4;         // 핀치 최대 배율
+    const DOUBLE_TAP_ZOOM = 2.5;
+    let zScale = 1, zX = 0, zY = 0;                 // 현재 배율·이동량 (transform 에 반영)
+    let pinching = false;
+    let pinchStartDist = 0, pinchStartScale = 1;    // 핀치 시작 시점의 손가락 간격·배율
+    let pinchStartMidX = 0, pinchStartMidY = 0;     // 핀치 시작 시점의 두 손가락 중간점
+    let pinchStartTx = 0, pinchStartTy = 0;         // 핀치 시작 시점의 이동량
+    let pinchImgCx = 0, pinchImgCy = 0;             // 변형 전 이미지 중심 (뷰포트 좌표)
+    let panning = false;
+    let panStartX = 0, panStartY = 0, panStartTx = 0, panStartTy = 0;
+    let lastTapTime = 0, lastTapX = 0, lastTapY = 0;
+
+    const touchDist = (e) => Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+    );
+    const touchMidX = (e) => (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    const touchMidY = (e) => (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+    // 현재 줌 상태를 이미지에 반영. 확대 중에는 브라우저 기본 터치 스크롤을 끄고 JS가 패닝 담당
+    function applyZoom(animate) {
+        lbImg.style.transition = animate ? "transform .25s ease" : "none";
+        lbImg.style.transform = zScale > 1
+            ? `translate(${zX}px, ${zY}px) scale(${zScale})` : "";
+        const ta = zScale > 1 ? "none" : "";
+        lbFigure.style.touchAction = ta;
+        lbImg.style.touchAction = ta;
+    }
+
+    // 확대된 사진이 화면에서 너무 멀리 벗어나지 않도록 이동량 제한
+    function clampPan() {
+        const w = lbImg.clientWidth || 0, h = lbImg.clientHeight || 0;
+        const maxX = Math.max(0, (zScale - 1) * w / 2);
+        const maxY = Math.max(0, (zScale - 1) * h / 2);
+        zX = Math.min(maxX, Math.max(-maxX, zX));
+        zY = Math.min(maxY, Math.max(-maxY, zY));
+    }
+
+    function resetZoom() {
+        zScale = 1; zX = 0; zY = 0;
+        pinching = false; panning = false;
+        applyZoom(false);
+    }
+
+    // 더블탭 판정: 두 번째 탭이면 확대↔원복 후 true 반환
+    function handleTap(e) {
+        const t = e.changedTouches && e.changedTouches[0];
+        if (!t) return false;
+        const now = Date.now();
+        const isDouble = (now - lastTapTime) < 300 &&
+            Math.abs(t.clientX - lastTapX) < 30 && Math.abs(t.clientY - lastTapY) < 30;
+        lastTapTime = now; lastTapX = t.clientX; lastTapY = t.clientY;
+        if (!isDouble) return false;
+        lastTapTime = 0; // 3연타가 다시 더블탭으로 인식되지 않도록
+        if (zScale > 1) {
+            zScale = 1; zX = 0; zY = 0;
+        } else {
+            // 탭한 지점을 중심으로 확대
+            const r = lbImg.getBoundingClientRect();
+            const cx = r.left + r.width / 2 - zX;
+            const cy = r.top + r.height / 2 - zY;
+            zScale = DOUBLE_TAP_ZOOM;
+            zX = (cx - t.clientX) * (zScale - 1);
+            zY = (cy - t.clientY) * (zScale - 1);
+            clampPan();
+        }
+        applyZoom(true);
+        return true;
+    }
+
     lbFigure.addEventListener("touchstart", (e) => {
+        if (animating) return;
+        if (e.touches.length === 2) {
+            // 핀치 시작 — 진행 중이던 스와이프/패닝은 취소
+            swiping = false;
+            panning = false;
+            pinching = true;
+            pinchStartDist = touchDist(e) || 1;
+            pinchStartScale = zScale;
+            pinchStartMidX = touchMidX(e);
+            pinchStartMidY = touchMidY(e);
+            pinchStartTx = zX;
+            pinchStartTy = zY;
+            // transform-origin 이 중앙이므로, 변형된 사각형의 중심 - 이동량 = 변형 전 중심
+            const r = lbImg.getBoundingClientRect();
+            pinchImgCx = r.left + r.width / 2 - zX;
+            pinchImgCy = r.top + r.height / 2 - zY;
+            lbImg.style.transition = "none";
+            lbImg.style.opacity = ""; // 스와이프 도중이었다면 투명도 복원
+            return;
+        }
         if (e.touches.length !== 1) return;
+        if (zScale > 1) {
+            // 확대 상태: 한 손가락은 패닝 (스와이프 넘김 없음)
+            panning = true;
+            panStartX = e.touches[0].clientX;
+            panStartY = e.touches[0].clientY;
+            panStartTx = zX;
+            panStartTy = zY;
+            lbImg.style.transition = "none";
+            return;
+        }
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
         touchDX = 0;
@@ -326,7 +490,31 @@ function initProjectGalleries() {
     }, { passive: true });
 
     lbFigure.addEventListener("touchmove", (e) => {
-        if (!swiping || animating || e.touches.length !== 1) return;
+        // (1) 핀치 확대/축소
+        if (pinching && e.touches.length === 2) {
+            e.preventDefault();
+            const s = Math.min(ZOOM_MAX, Math.max(0.5, pinchStartScale * touchDist(e) / pinchStartDist));
+            // 핀치 시작 때 두 손가락 중간점 아래에 있던 지점이 계속 그 자리에 오도록 이동량 계산
+            const px = (pinchStartMidX - pinchImgCx - pinchStartTx) / pinchStartScale;
+            const py = (pinchStartMidY - pinchImgCy - pinchStartTy) / pinchStartScale;
+            zScale = s;
+            zX = touchMidX(e) - pinchImgCx - px * s;
+            zY = touchMidY(e) - pinchImgCy - py * s;
+            clampPan();
+            applyZoom(false);
+            return;
+        }
+        // (2) 확대 상태 한 손가락 패닝
+        if (panning && zScale > 1 && e.touches.length === 1) {
+            e.preventDefault();
+            zX = panStartTx + (e.touches[0].clientX - panStartX);
+            zY = panStartTy + (e.touches[0].clientY - panStartY);
+            clampPan();
+            applyZoom(false);
+            return;
+        }
+        // (3) 1배 상태 좌우 스와이프 (확대 중에는 동작하지 않음)
+        if (!swiping || animating || e.touches.length !== 1 || zScale > 1) return;
         const dx = e.touches[0].clientX - touchStartX;
         const dy = e.touches[0].clientY - touchStartY;
         // 세로 이동이 더 크면 스크롤 의도로 보고 스와이프 취소
@@ -359,8 +547,54 @@ function initProjectGalleries() {
             lbImg.style.opacity = "";
         }
     }
-    lbFigure.addEventListener("touchend", endSwipe);
-    lbFigure.addEventListener("touchcancel", endSwipe);
+
+    lbFigure.addEventListener("touchend", (e) => {
+        if (pinching) {
+            if (e.touches.length < 2) {
+                pinching = false;
+                if (zScale <= 1) {
+                    // 1배 이하로 줄였으면 1배로 스냅
+                    zScale = 1; zX = 0; zY = 0;
+                    applyZoom(true);
+                } else if (e.touches.length === 1) {
+                    // 남은 한 손가락으로 곧바로 패닝 이어가기
+                    panning = true;
+                    panStartX = e.touches[0].clientX;
+                    panStartY = e.touches[0].clientY;
+                    panStartTx = zX;
+                    panStartTy = zY;
+                }
+            }
+            return;
+        }
+        if (panning) {
+            if (e.touches.length === 0) {
+                panning = false;
+                // 거의 움직이지 않았으면 탭으로 간주 → 더블탭이면 원복
+                const t = e.changedTouches[0];
+                if (t && Math.abs(t.clientX - panStartX) < 10 &&
+                    Math.abs(t.clientY - panStartY) < 10) handleTap(e);
+            }
+            return;
+        }
+        if (swiping && Math.abs(touchDX) < 10) {
+            // 거의 움직이지 않은 탭 → 더블탭이면 확대하고 스와이프 복귀 처리 생략
+            if (handleTap(e)) { swiping = false; return; }
+        }
+        endSwipe();
+    });
+    lbFigure.addEventListener("touchcancel", () => {
+        pinching = false;
+        panning = false;
+        if (zScale <= 1) resetZoom();
+        endSwipe();
+    });
+
+    // 라이트박스 안에서 갤러리 스크롤 영역(.lb-stage) 밖을 문지르면 배경으로
+    // 스크롤이 전파되지 않도록 차단 (iOS 고무줄 스크롤 대비)
+    lb.addEventListener("touchmove", (e) => {
+        if (!e.target.closest(".lb-stage")) e.preventDefault();
+    }, { passive: false });
 
     // ---------- 지도 아이콘 생성 ----------
     function makeMapIcon(url) {
